@@ -6,7 +6,7 @@
 #define LED_VERMELHO 42
 
 #define DELAY 5000 // quanto tempo esperar antes de voltar a ler um novo ID
-#define N_AUTORIZADOS 2 // numero de tags cadastradas no sistema como tags autorizadas
+#define DEBUG_MODE 1 // quando ativo simula cards sendo lidos a todo momento
 
 // Os pinos SDA e RST do receptor
 #define SS_PIN 53
@@ -18,11 +18,7 @@
   MISO  -> 50
 */
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Criando a instancia da classe que controla o receptor
-  
-String lista_autorizados[N_AUTORIZADOS] = { // esta é a lista de tags autorizados
-                              "34 76 B1 EB", // O chaveiro
-                              "AC 2A ED 75" // O card
-                              };
+ 
 void setup() {
   Serial.begin(9600); // Inicia a serial
   SPI.begin();    // Inicia  SPI bus
@@ -38,24 +34,28 @@ void setup() {
 void loop() {
   checarReceptor();
   
-  // Emquanto não encontrar novos cartões
-  digitalWrite(LED_AMARELO, HIGH); // iniciando leitura
-  if (!mfrc522.PICC_IsNewCardPresent()) return;
-  
-  // Caso não tenha conseguido ler
-  if(!mfrc522.PICC_ReadCardSerial()) return;
-  
-  String conteudo = ""; // essa string vai receber todo o conteudo da tag RFID
-  // este loop recebe todo conteudo do cartão/chaveiro
-  for (byte i = 0; i < mfrc522.uid.size; i++) {
-     conteudo.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-     conteudo.concat(String(mfrc522.uid.uidByte[i], HEX));
+  if(!DEBUG_MODE) {
+    // Emquanto não encontrar novos cartões
+    digitalWrite(LED_AMARELO, HIGH); // iniciando leitura
+    if (!mfrc522.PICC_IsNewCardPresent()) return;
+    
+    // Caso não tenha conseguido ler
+    if(!mfrc522.PICC_ReadCardSerial()) return;
+    
+    String conteudo = ""; // essa string vai receber todo o conteudo da tag RFID
+    // este loop recebe todo conteudo do cartão/chaveiro
+    for (byte i = 0; i < mfrc522.uid.size; i++) {
+       conteudo.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+       conteudo.concat(String(mfrc522.uid.uidByte[i], HEX));
+    }
+    
+    conteudo.toUpperCase(); // apenas para deixar mais apresentável
+    conteudo = conteudo.substring(1); // removendo o primeiro caractere que é inútil
   }
-  
-  conteudo.toUpperCase(); // apenas para deixar mais apresentável
-  conteudo = conteudo.substring(1); // removendo o primeiro caractere que é inútil
-  Serial.println(conteudo); // mostrando o que leu
-
+  else {
+    delay(1000);
+    conteudo = "XX XX XX XX";
+  }
   if (checarAutorizacao(conteudo)) // Caso esteja na lista de autorizados
     autorizar();
   else // ID não reconhecido
@@ -66,10 +66,15 @@ void loop() {
   Essa função busca se o ID passado está na lista de autorizados
 */
 bool checarAutorizacao(String ID) {
-  for(int i = 0; i < N_AUTORIZADOS; i++) // Percorrendo a lista completa
-    if(ID == lista_autorizados[i]) // Checando se o ID é igual ao item da lista
-      return true; // O ID passado está presente na lista
-  // Terminou o loop e não encontrou na lista então deve retornar false
+  char leitura; // Variavel que receberá os valores enviados pelo programa em python
+  
+  Serial.println(conteudo); // enviado a tag lida
+
+  while(Serial.available() <= 0); // aguardando por tempo indeterminado
+  leitura = Serial.read();  // lendo a resposta
+ 
+   if(leitura = 'S') return true;
+ 
   return false;
 }
 
