@@ -12,7 +12,7 @@
 #define SS_PIN 53
 #define RST_PIN 9
 /*
-  Os pinos abaixo obrigatoriamente tem que estar nessas posições
+  Os pinos abaixo obrigatoriamente tem que estar nessas posições no caso do Arduino MEGA
   SCK -> 52
   MOSI  -> 51
   MISO  -> 50
@@ -21,7 +21,7 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);  // Criando a instancia da classe que controla
   
 String lista_autorizados[N_AUTORIZADOS] = { // esta é a lista de tags autorizados
                               "34 76 B1 EB", // O chaveiro
-                              "AC 2A ED 75"
+                              "AC 2A ED 75" // O card
                               };
 void setup() {
   Serial.begin(9600); // Inicia a serial
@@ -43,27 +43,24 @@ void loop() {
   // Emquanto não encontrar novos cartões
   digitalWrite(LED_AMARELO, HIGH); // iniciando leitura
   if (!mfrc522.PICC_IsNewCardPresent()) return;
-    
+  
   // Caso não tenha conseguido ler
-  if(!mfrc522.PICC_ReadCardSerial()) {
-    digitalWrite(LED_AMARELO, LOW);
-    return;
-  }
+  if(!mfrc522.PICC_ReadCardSerial()) return;
   
   //Mostra UID na serial
   Serial.print("ID da tag: ");
-  String conteudo= "";
+  String conteudo = ""; // essa string vai receber todo o conteudo da tag RFID
   // este loop recebe todo conteudo do cartão/chaveiro
   for (byte i = 0; i < mfrc522.uid.size; i++) {
      conteudo.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
      conteudo.concat(String(mfrc522.uid.uidByte[i], HEX));
   }
   
-  conteudo.toUpperCase(); // spenas para deixar mais apresentável
+  conteudo.toUpperCase(); // apenas para deixar mais apresentável
   conteudo = conteudo.substring(1); // removendo o primeiro caractere que é inútil
   Serial.println(conteudo); // mostrando o que leu
 
-  if (checarAutorizacao(conteudo)) { //UID 1 - Chaveiro
+  if (checarAutorizacao(conteudo)) { // Caso esteja na lista de autorizados
     autorizar();
   }
   else { // ID não reconhecido
@@ -71,11 +68,14 @@ void loop() {
   }
 }
 
+/*
+  Essa função busca se o ID passado está na lista de autorizados
+*/
 bool checarAutorizacao(String ID) {
-  for(int i = 0; i < N_AUTORIZADOS; i++)
-    if(ID == lista_autorizados[i]) 
-      return true;
-    
+  for(int i = 0; i < N_AUTORIZADOS; i++) // Percorrendo a lista completa
+    if(ID == lista_autorizados[i]) // Checando se o ID é igual ao item da lista
+      return true; // O ID passado está presente na lista
+  // Terminou o loop e não encontrou na lista então deve retornar false
   return false;
 }
 
