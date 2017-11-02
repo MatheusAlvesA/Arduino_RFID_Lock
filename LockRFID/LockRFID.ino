@@ -33,6 +33,7 @@ void setup() {
  
 void loop() {
   checarReceptor();
+  String conteudo = ""; // essa string vai receber todo o conteudo da tag RFID
   
   if(!DEBUG_MODE) {
     // Emquanto não encontrar novos cartões
@@ -42,7 +43,6 @@ void loop() {
     // Caso não tenha conseguido ler
     if(!mfrc522.PICC_ReadCardSerial()) return;
     
-    String conteudo = ""; // essa string vai receber todo o conteudo da tag RFID
     // este loop recebe todo conteudo do cartão/chaveiro
     for (byte i = 0; i < mfrc522.uid.size; i++) {
        conteudo.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
@@ -68,12 +68,12 @@ void loop() {
 bool checarAutorizacao(String ID) {
   char leitura; // Variavel que receberá os valores enviados pelo programa em python
   
-  Serial.println(conteudo); // enviado a tag lida
+  Serial.println(ID); // enviado a tag lida
 
   while(Serial.available() <= 0); // aguardando por tempo indeterminado
   leitura = Serial.read();  // lendo a resposta
  
-   if(leitura = 'S') return true;
+   if(leitura == 'S') return true;
  
   return false;
 }
