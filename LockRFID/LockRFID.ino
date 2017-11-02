@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <MFRC522.h>
 // o pino onde a entrada de energia dos leds está plugada
-#define LED_VERDE 40 
+#define LED_VERDE 40
 #define LED_AMARELO 41
 #define LED_VERMELHO 42
 
@@ -27,19 +27,17 @@ void setup() {
   Serial.begin(9600); // Inicia a serial
   SPI.begin();    // Inicia  SPI bus
   mfrc522.PCD_Init(); // Inicia MFRC522
-  
-  Serial.println("Aproxime o seu cartão/chaveiro do leitor...");
-  Serial.println();
 
   //Preparando os leds para acender
   pinMode(LED_VERDE, OUTPUT);
   pinMode(LED_VERMELHO, OUTPUT);
   pinMode(LED_AMARELO, OUTPUT);
-
-  checarReceptor();
+  testar_leds();
 }
  
 void loop() {
+  checarReceptor();
+  
   // Emquanto não encontrar novos cartões
   digitalWrite(LED_AMARELO, HIGH); // iniciando leitura
   if (!mfrc522.PICC_IsNewCardPresent()) return;
@@ -47,8 +45,6 @@ void loop() {
   // Caso não tenha conseguido ler
   if(!mfrc522.PICC_ReadCardSerial()) return;
   
-  //Mostra UID na serial
-  Serial.print("ID da tag: ");
   String conteudo = ""; // essa string vai receber todo o conteudo da tag RFID
   // este loop recebe todo conteudo do cartão/chaveiro
   for (byte i = 0; i < mfrc522.uid.size; i++) {
@@ -60,12 +56,10 @@ void loop() {
   conteudo = conteudo.substring(1); // removendo o primeiro caractere que é inútil
   Serial.println(conteudo); // mostrando o que leu
 
-  if (checarAutorizacao(conteudo)) { // Caso esteja na lista de autorizados
+  if (checarAutorizacao(conteudo)) // Caso esteja na lista de autorizados
     autorizar();
-  }
-  else { // ID não reconhecido
+  else // ID não reconhecido
     negar();
-  }
 }
 
 /*
@@ -83,26 +77,22 @@ bool checarAutorizacao(String ID) {
   Essa função deve ser executada quando o id lido for correto
 */
 void autorizar() {
-    Serial.println("Acesso permitido !");
     digitalWrite(LED_VERDE, HIGH);
     digitalWrite(LED_AMARELO, LOW);
     digitalWrite(LED_VERMELHO, LOW);
-    delay(DELAY); // espera 5 segundos
+    delay(DELAY);
     digitalWrite(LED_VERDE, LOW);
-    Serial.println();
 }
 
 /*
   Essa função deve ser executada quando o id lido for INcorreto
 */
 void negar() {
-   Serial.println("Acesso Negado !");
     digitalWrite(LED_VERDE, LOW);
     digitalWrite(LED_AMARELO, LOW);
     digitalWrite(LED_VERMELHO, HIGH);
-    delay(DELAY); // espera 5 segundos
+    delay(DELAY);
     digitalWrite(LED_VERMELHO, LOW);
-    Serial.println();
 }
 
 /*
@@ -113,13 +103,34 @@ void checarReceptor() {
   byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
   
   if ((v == 0x00) || (v == 0xFF)) {
-    Serial.println("Falha na conexão com o Receptor");
-    Serial.println("Verifique a conexão e reinicie o arduino");
-
     digitalWrite(LED_VERDE, LOW);
     digitalWrite(LED_AMARELO, LOW);
-    digitalWrite(LED_VERMELHO, HIGH);
-    while (true); // travar
+    while ((v == 0x00) || (v == 0xFF)) { // travar
+      digitalWrite(LED_VERMELHO, HIGH);
+      delay(500);
+      digitalWrite(LED_VERMELHO, LOW);
+      delay(500);
+      v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg); // checar de novo
+    }
   }
+}
+/*
+  Esta função é apenas para debug e saber se os leds estão be conectados
+*/
+void testar_leds() {
+   digitalWrite(LED_VERDE, LOW);
+   digitalWrite(LED_AMARELO, LOW);
+   digitalWrite(LED_VERMELHO, LOW);
+
+   digitalWrite(LED_VERDE, HIGH);
+   delay(500);
+   digitalWrite(LED_AMARELO, HIGH);
+   delay(500);
+   digitalWrite(LED_VERMELHO, HIGH);
+   delay(500);
+
+   digitalWrite(LED_VERDE, LOW);
+   digitalWrite(LED_AMARELO, LOW);
+   digitalWrite(LED_VERMELHO, LOW);
 }
 
