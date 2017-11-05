@@ -1,13 +1,28 @@
 import serial
+import MySQLdb
 
+#Criando conexao com o banco
+con = MySQLdb.connect(host="45.77.161.79", user="root", passwd="teste123", db="lista")
+#obtendo cursor
+cursor = con.cursor()
+#Executando download da lista
+cursor.execute("SELECT * FROM lista")
+lista = []
+#Extraindo a lista
+for row in cursor.fetchall():
+	lista.append(row[0])
+	print row[0]
+
+# Funcao de busca da chave na lista
 def checar(chave):
-	if(chave == 'XX XX XX XX'):
-		return True
+	global lista
+	for k in lista:
+		if(chave == k):
+			return True
 	return False
 
-
-porta = '/dev/ttyACM0'
-baud_rate = 9600
+porta = '/dev/ttyACM0' # Porta comum no raspberry
+baud_rate = 9600 # Frequencia de comunicacao
 
 porta = serial.Serial(porta, baud_rate)
 

@@ -6,7 +6,7 @@
 #define LED_VERMELHO 42
 
 #define DELAY 5000 // quanto tempo esperar antes de voltar a ler um novo ID
-#define DEBUG_MODE 1 // quando ativo simula cards sendo lidos a todo momento
+#define DEBUG_MODE 0 // quando ativo simula cards sendo lidos a todo momento
 
 // Os pinos SDA e RST do receptor
 #define SS_PIN 53
@@ -34,10 +34,11 @@ void setup() {
 void loop() {
   checarReceptor();
   String conteudo = ""; // essa string vai receber todo o conteudo da tag RFID
+  // Emquanto não encontrar novos cartões
+  digitalWrite(LED_AMARELO, HIGH); // iniciando leitura
   
   if(!DEBUG_MODE) {
-    // Emquanto não encontrar novos cartões
-    digitalWrite(LED_AMARELO, HIGH); // iniciando leitura
+
     if (!mfrc522.PICC_IsNewCardPresent()) return;
     
     // Caso não tenha conseguido ler
