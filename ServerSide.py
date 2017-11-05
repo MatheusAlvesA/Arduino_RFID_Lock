@@ -11,7 +11,6 @@ lista = []
 #Extraindo a lista
 for row in cursor.fetchall():
 	lista.append(row[0])
-	print row[0]
 
 # Funcao de busca da chave na lista
 def checar(chave):
