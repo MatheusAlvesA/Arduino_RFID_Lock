@@ -40,7 +40,7 @@ void loop() {
   if(!DEBUG_MODE) {
 
     if (!mfrc522.PICC_IsNewCardPresent()) return;
-    
+
     // Caso não tenha conseguido ler
     if(!mfrc522.PICC_ReadCardSerial()) return;
     
