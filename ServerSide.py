@@ -3,6 +3,7 @@ import MySQLdb
 from time import sleep
 
 debug_mode = True
+master_key = '34 76 B1 EB'
 
 if debug_mode:
 	lista = ['XX XX XX XX', '34 76 B1 EB']
@@ -26,6 +27,13 @@ def checar(chave):
 			return True
 	return False
 
+def cadastrar(chave):
+	global lista, cursor
+	lista.append(chave)
+	if not debug_mode:
+		cursor.execute("INSERT INTO lista(chave) VALUES ('",chave,"');")
+	print "Chave cadastrada: [",chave,"]\n"
+
 porta = '/dev/ttyACM0' # Porta comum no raspberry
 baud_rate = 9600 # Frequencia de comunicacao
 
@@ -38,12 +46,18 @@ if __name__=='__main__':
 	print("===========================================")
 
 	while True:
-		ID = porta.readline()[:-2];
-		if(checar(ID)):
-			porta.write('S') # chave autorizada
-			print "Chave autorizada: [",ID,"]\n"
+		ID = porta.readline()[:-2]
+		if ID == master_key:
+			print "Chave Mestre detectada\nInsira a nova chave a ser cadastrada"
+			porta.write('S')
+			cadastradar(porta.readline()[:-2])
+			porta.write('S')
 		else:
-			porta.write('N') # Acesso negado
-			print "Chave negada: [", ID,"]\n"
+			if(checar(ID)):
+				porta.write('S') # chave autorizada
+				print "Chave autorizada: [",ID,"]\n"
+			else:
+				porta.write('N') # Acesso negado
+				print "Chave negada: [", ID,"]\n"
 
 porta.close()
