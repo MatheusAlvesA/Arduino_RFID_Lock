@@ -48,9 +48,9 @@ if __name__=='__main__':
 	while True:
 		ID = porta.readline()[:-2]
 		if ID == master_key:
-			print "Chave Mestre detectada\nInsira a nova chave a ser cadastrada"
+			print "Chave Mestre detectada\nInsira a nova chave a ser cadastrada\n"
 			porta.write('S')
-			cadastradar(porta.readline()[:-2])
+			cadastrar(porta.readline()[:-2])
 			porta.write('S')
 		else:
 			if(checar(ID)):
